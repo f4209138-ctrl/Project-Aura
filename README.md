@@ -3,6 +3,8 @@
   <h1>AuraBrowser</h1>
   <p><strong>A quiet, privacy-first browser that keeps your data on your machine.</strong></p>
   <p>
+    <a href="https://f4209138-ctrl.github.io/Project-Aura/"><b>Website</b></a> ·
+    <a href="https://github.com/f4209138-ctrl/Project-Aura/releases/latest/download/AuraBrowser-Setup.exe"><b>Download</b></a> ·
     <a href="#install">Install</a> ·
     <a href="#features">Features</a> ·
     <a href="#why-i-built-it">Why I built it</a> ·
@@ -90,9 +92,9 @@ All of these can be changed in *Settings → Keyboard shortcuts*.
 
 **Windows (x64)**
 
-1. Download the installer bundle from the [Releases](../../releases) page and extract it.
-2. Run **`Install-AuraBrowser.cmd`**.
-3. Pick an install folder. AuraBrowser installs for your user only, so no admin rights are needed. It adds Desktop and Start Menu shortcuts and opens the one-time setup page.
+1. Download **[AuraBrowser-Setup.exe](https://github.com/f4209138-ctrl/Project-Aura/releases/latest/download/AuraBrowser-Setup.exe)** (or from the [Releases](../../releases) page).
+2. Run it and choose where to install. AuraBrowser installs for your user only, so no admin rights are needed. It adds Desktop and Start Menu shortcuts.
+3. The first launch opens a one-time setup page to import your data and pick your settings.
 
 To uninstall, use **Uninstall AuraBrowser** in the Start Menu, or go to *Settings → Apps*.
 
