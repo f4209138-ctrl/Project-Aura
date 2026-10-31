@@ -1,0 +1,23 @@
+{
+  "name": "aurabrowser-prototype",
+  "version": "0.4.0",
+  "private": true,
+  "description": "A quiet, privacy-first desktop browser. No account, no telemetry, Tor built in.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "fetch:tor": "node scripts/fetch-tor.js",
+    "package": "node scripts/package.js"
+  },
+  "devDependencies": {
+    "electron": "44.9.3",
+    "electron-builder": "26.18.0",
+    "openpgp": "6.3.2",
+    "tar": "^7.5.22"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^14.0.3"
+  },
+  "license": "MIT",
+  "author": "Team Aura <13teamsaura@gmail.com>"
+}

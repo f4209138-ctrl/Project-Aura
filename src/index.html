@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https: http:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>AuraBrowser</title>
+  <link rel="icon" type="image/png" href="./assets/aurabrowser-logo.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./renderer.js" defer></script>
+</head>
+<body>
+  <div class="app-frame">
+    <header class="titlebar">
+      <img class="brand-mark" src="./assets/aurabrowser-logo.png" alt="AuraBrowser">
+      <div class="brand-name">aura<span>browser</span></div>
+      <div class="titlebar-caption">A quieter web</div>
+      <div class="window-controls">
+        <button id="minimizeWindow" class="window-control" aria-label="Minimize">−</button>
+        <button id="maximizeWindow" class="window-control" aria-label="Maximize">□</button>
+        <button id="closeWindow" class="window-control close-window" aria-label="Close">×</button>
+      </div>
+    </header>
+    <div id="browserShell" class="browser-shell">
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-topline">
+          <div class="workspace-label"><span class="workspace-dot"></span> <span id="profileNameLabel">PERSONAL</span></div>
+          <button id="collapseSidebar" class="icon-button subtle" aria-label="Collapse sidebar" title="Collapse sidebar">‹</button>
+        </div>
+        <div class="sidebar-section-heading">
+          <span>OPEN PAGES</span>
+          <button id="newTab" class="icon-button add-tab" aria-label="New tab" title="New tab">+</button>
+        </div>
+        <div id="tabList" class="tab-list" role="list"></div>
+        <button id="newTabLarge" class="new-tab-row"><span class="plus-small">+</span><span>New page</span><kbd>Ctrl T</kbd></button>
+        <div class="sidebar-bottom">
+          <div class="hibernation-note"><span class="sleep-icon">◌</span><span id="hibernationNote">Quiet tabs sleep after <b>1 min</b></span></div>
+          <button id="privacyButton" class="privacy-card">
+            <span class="privacy-card-icon">✳</span>
+            <span class="privacy-card-copy"><b>Privacy controls</b><small>Local protections</small></span>
+            <span class="privacy-card-arrow">›</span>
+          </button>
+          <div class="sidebar-footer"><span class="status-dot"></span> No analytics. No account.</div>
+        </div>
+      </aside>
+      <main class="browser-main">
+        <nav class="toolbar">
+          <div class="navigation-controls">
+            <button id="backButton" class="round-button" aria-label="Back" title="Back">←</button>
+            <button id="forwardButton" class="round-button" aria-label="Forward" title="Forward">→</button>
+            <button id="reloadButton" class="round-button" aria-label="Reload" title="Reload">↻</button>
+          </div>
+          <form id="addressForm" class="address-form">
+            <span id="addressLock" class="address-lock" aria-hidden="true">⌑</span>
+            <input id="addressInput" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Search or enter address" placeholder="Search or enter address">
+            <span class="address-hint">Ctrl L</span>
+          </form>
+          <div class="toolbar-actions">
+            <button id="glanceButton" class="toolbar-chip" title="Open an isolated quick preview (Ctrl Shift G)"><span>◉</span> Glance</button>
+            <div class="split-wrap">
+              <button id="splitButton" class="toolbar-icon" aria-label="Split view options" title="Split view">▤</button>
+              <div id="splitMenu" class="popover split-menu hidden">
+                <div class="popover-title">Arrange pages</div>
+                <button data-split="half"><span>◫</span><span><b>Side by side</b><small>Equal 50 / 50</small></span></button>
+                <button data-split="wide"><span>◧</span><span><b>Wide + narrow</b><small>60 / 40</small></span></button>
+                <button data-split="three"><span>▥</span><span><b>Three columns</b><small>Three open pages</small></span></button>
+                <button data-split="off" class="split-clear"><span>×</span><span><b>Close split</b><small>Return to one page</small></span></button>
+              </div>
+            </div>
+            <button id="focusButton" class="toolbar-icon" aria-label="Toggle focus mode" title="Focus mode">⛶</button>
+            <button id="bookmarkPageButton" class="toolbar-icon bookmark-page-button" aria-label="Bookmark this page" title="Bookmark this page">☆</button>
+            <button id="downloadsButton" class="toolbar-icon" aria-label="Downloads" title="Downloads">⇩</button>
+            <div class="toolbar-divider"></div>
+            <button id="settingsButton" class="toolbar-icon settings-icon" aria-label="Settings" title="Settings">⚙</button>
+          </div>
+        </nav>
+        <div class="statusbar">
+          <div class="site-status">
+            <span id="connectionPill" class="connection-pill"><span class="connection-dot"></span><span id="connectionText">Waiting</span></span>
+            <span class="status-separator"></span>
+            <span class="reputation-label"><span class="reputation-dot"></span> Reputation <b>Unknown</b></span>
+          </div>
+          <div class="status-meta">
+            <span id="blockedCount">0 requests filtered</span>
+            <span class="status-separator"></span>
+            <span id="pageTitle">AuraBrowser</span>
+            <span class="split-indicator hidden" id="splitIndicator"><span class="split-indicator-dot"></span><span id="splitLabel">Split view</span></span>
+          </div>
+        </div>
+        <section id="webStage" class="web-stage" aria-label="Web page viewport">
+          <div id="tabDropOverlay" class="tab-drop-overlay hidden" aria-live="polite">
+            <div class="tab-drop-card"><span class="tab-drop-icon">◫</span><strong>Drop to open a split view</strong><small>The dragged page will open beside the current page.</small></div>
+          </div>
+          <div class="stage-loading"><span class="stage-orb"></span><span>Preparing a quieter web…</span></div>
+          <div id="findBar" class="find-bar hidden" role="search"><input id="findInput" type="search" placeholder="Find on page" aria-label="Find on page"><span id="findMatchCount" aria-live="polite"></span><button id="findPrevious" title="Previous match" aria-label="Previous match">↑</button><button id="findNext" title="Next match" aria-label="Next match">↓</button><button id="closeFind" title="Close find" aria-label="Close find">×</button></div>
+        
+<div id="settingsPage" class="settings-page hidden" role="main" aria-label="AuraBrowser settings">
+  <header class="settings-page-header">
+    <button id="closeSettings" class="settings-back" type="button" aria-label="Back to browsing">← <span>Back to browsing</span></button>
+    <div class="settings-page-brand"><img class="settings-gear" src="./assets/aurabrowser-logo.png" alt="AuraBrowser"><div><h1>Settings</h1><p>Make AuraBrowser work the way you do.</p></div></div>
+    <label class="settings-search-wrap"><span aria-hidden="true">⌕</span><input id="settingsSearch" type="search" placeholder="Search settings" aria-label="Search settings"></label>
+  </header>
+  <div class="settings-page-layout">
+    <nav class="settings-nav" aria-label="Settings categories">
+      <button class="settings-nav-item active" data-settings-target="appearance">Appearance</button>
+      <button class="settings-nav-item" data-settings-target="profile">Profile</button>
+      <button class="settings-nav-item" data-settings-target="content">Content</button>
+      <button class="settings-nav-item" data-settings-target="shields">Shields</button>
+      <button class="settings-nav-item" data-settings-target="privacy">Privacy and security</button>
+      <button class="settings-nav-item" data-settings-target="search">Search engine</button>
+      <button class="settings-nav-item" data-settings-target="extensions">Extensions</button>
+      <button class="settings-nav-item" data-settings-target="autofill">Autofill and passwords</button>
+      <button class="settings-nav-item" data-settings-target="languages">Languages</button>
+      <button class="settings-nav-item" data-settings-target="downloads">Downloads</button>
+      <button class="settings-nav-item" data-settings-target="accessibility">Accessibility</button>
+      <button class="settings-nav-item" data-settings-target="system">System</button>
+      <button class="settings-nav-item" data-settings-target="keyboard">Keyboard shortcuts</button>
+      <button class="settings-nav-item" data-settings-target="developer">Developer tools</button>
+      <button class="settings-nav-item" data-settings-target="import">Import data</button>
+      <button class="settings-nav-item" data-settings-target="reset">Reset settings</button>
+      <button class="settings-nav-item" data-settings-target="about">About AuraBrowser</button>
+    </nav>
+    <div class="settings-content">
+      <section class="settings-section active" data-settings-section="appearance">
+        <h2>Appearance</h2><p class="settings-intro">Choose how AuraBrowser looks and how website pages are scaled.</p>
+        <label class="setting-row"><span class="setting-copy"><b>Interface text size</b><small>Adjust labels and tab titles.</small></span><select id="interfaceSize" class="setting-select"><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></label>
+        <label class="setting-row"><span class="setting-copy"><b>Theme</b><small>Choose a dark or light browser interface.</small></span><select id="theme" class="setting-select"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+        <label class="setting-row zoom-row"><span class="setting-copy"><b>Website zoom</b><small>Resize webpages from 50% to 200%.</small></span><input id="pageZoom" class="setting-range" type="range" min="0.5" max="2" step="0.05"><output id="pageZoomValue" class="range-value">100%</output></label>
+      </section>
+      <section class="settings-section" data-settings-section="profile">
+        <h2>Profile</h2><p class="settings-intro">Set the name and region used for this browser profile.</p>
+        <label class="setting-row"><span class="setting-copy"><b>Profile name</b><small>Shown in the sidebar on this device.</small></span><input id="profileName" class="setting-text-input" type="text" maxlength="40" autocomplete="off" placeholder="Personal"></label>
+        <label class="setting-row"><span class="setting-copy"><b>Country or region</b><small>Used to set the language and regional preference sent to websites.</small></span><select id="country" class="setting-select"><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="NZ">New Zealand</option><option value="DE">Germany</option><option value="FR">France</option><option value="JP">Japan</option><option value="BR">Brazil</option><option value="SG">Singapore</option></select></label>
+      </section>
+      <section class="settings-section" data-settings-section="content">
+        <h2>Content</h2><p class="settings-intro">Manage content behavior for websites.</p>
+        <label class="setting-row"><span class="setting-copy"><b>Block pop-up windows</b><small>Block websites from opening new windows and tabs.</small></span><input id="popupToggle" class="switch" type="checkbox"></label>
+        <div class="settings-info-card"><b>Site permissions</b><span>Camera, microphone, notifications, and other website permission prompts are blocked by default.</span></div>
+      </section>
+      <section class="settings-section" data-settings-section="shields">
+        <h2>Shields</h2><p class="settings-intro">Local protections for the pages you visit.</p>
+        <label class="setting-row"><span class="setting-copy"><b>Block common trackers</b><small>Basic local list; not Brave Shields.</small></span><input id="trackerToggle" class="switch" type="checkbox"></label>
+        <label class="setting-row"><span class="setting-copy"><b>Prefer HTTPS</b><small>Upgrade HTTP links when possible.</small></span><input id="httpsToggle" class="switch" type="checkbox"></label>
+      </section>
+      <section class="settings-section" data-settings-section="privacy">
+        <h2>Privacy and security</h2><p class="settings-intro">Manage private routing and local browser protections.</p>
+        <div class="setting-row informational"><span class="setting-copy"><b>Tor routing</b><small id="torStatus">Checking bundled Tor…</small></span><button id="torToggle" class="setting-action" disabled>Connect</button></div>
+        <div class="settings-info-card"><b>Private by default</b><span>AuraBrowser does not send browsing metrics. Websites you open receive normal requests unless Tor is connected.</span></div>
+        <div class="setting-row"><span class="setting-copy"><b>Clear site data and cache</b><small>Remove cookies, local site storage, and cached files.</small></span><button id="clearSiteData" class="setting-action">Clear data</button></div>
+        <h3 class="settings-subheading">Site permissions</h3>
+        <p class="settings-intro">Sites must ask before using your camera, microphone, location, notifications or clipboard. Your answers are listed here.</p>
+        <div id="sitePermissionList" class="site-permission-list"></div>
+        <div class="setting-row"><span class="setting-copy"><b>Reset all site permissions</b><small>Every site will have to ask again.</small></span><button id="resetSitePermissions" class="setting-action">Reset</button></div>
+      </section>
+      <section class="settings-section" data-settings-section="search">
+        <h2>Search engine</h2><p class="settings-intro">Choose what AuraBrowser uses when you search from the address bar.</p>
+        <label class="setting-row"><span class="setting-copy"><b>Search engine</b><small>Used when you enter search terms.</small></span><select id="searchEngine" class="setting-select"><option value="brave">Brave Search</option><option value="duckduckgo">DuckDuckGo</option><option value="google">Google</option><option value="bing">Bing</option><option value="startpage">Startpage</option><option value="ecosia">Ecosia</option></select></label>
+      </section>
+      <section class="settings-section" data-settings-section="extensions">
+        <h2>Extensions</h2><p class="settings-intro">Manage browser extensions.</p>
+        <div class="settings-info-card"><b>Extension support</b><span>Extensions are not supported in this AuraBrowser build yet.</span></div>
+      </section>
+      <section class="settings-section" data-settings-section="autofill">
+        <h2>Autofill and passwords</h2><p class="settings-intro">Use an email alias to keep your personal address private when signing up for websites.</p>
+        <div class="settings-info-card alias-provider-note"><b>Email Aliases · SimpleLogin</b><span>Aliases are created and forwarded by SimpleLogin. Connect your own SimpleLogin account with an API key. AuraBrowser stores the key encrypted with your operating system account and sends it only to SimpleLogin when you use alias controls.</span></div>
+        <div id="aliasMessage" class="alias-message" role="status" aria-live="polite"></div>
+        <div id="aliasConnectPanel" class="alias-connect-panel">
+          <label class="alias-key-label" for="simpleLoginApiKey">SimpleLogin API key</label>
+          <div class="alias-connect-row"><input id="simpleLoginApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste API key"><button id="connectAliases" class="setting-action">Connect</button></div>
+          <small>Find or create an API key in your SimpleLogin account settings.</small>
+        </div>
+        <div id="aliasManager" class="alias-manager hidden">
+          <div class="alias-account-row"><span><b>Connected to SimpleLogin</b><small id="aliasAccountEmail">Account connected</small></span><button id="disconnectAliases" class="text-action">Disconnect</button></div>
+          <div class="alias-create-row"><input id="aliasNote" type="text" maxlength="100" placeholder="Optional note, e.g. Newsletter"><button id="createAlias" class="setting-action">Create alias</button></div>
+          <div id="aliasList" class="alias-list"></div>
+          <button id="loadMoreAliases" class="load-more-aliases hidden">Load more aliases</button>
+        </div>
+      </section>
+      <section class="settings-section" data-settings-section="languages">
+        <h2>Languages</h2><p class="settings-intro">Language and translation preferences.</p>
+        <label class="setting-row"><span class="setting-copy"><b>Preferred website language</b><small>Sent to websites as your language preference. Browser menus remain in English.</small></span><select id="language" class="setting-select"><option value="en">English</option><option value="hi">Hindi</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="ja">Japanese</option><option value="pt">Portuguese</option></select></label>
+      </section>
+      <section class="settings-section" data-settings-section="downloads">
+        <h2>Downloads</h2><p class="settings-intro">Choose where downloaded files are saved.</p>
+        <div class="download-location-card"><div><b>Download folder</b><span id="downloadDirectoryLabel">Ask where to save each file</span></div><div class="download-location-actions"><button id="chooseDownloadDirectory" class="setting-action">Choose folder</button><button id="clearDownloadDirectory" class="text-action">Ask every time</button></div></div>
+        <div class="download-manager-heading"><h3>Download activity</h3><small>Pause, resume, cancel, or open current-session downloads.</small></div>
+        <div id="downloadList" class="download-list"></div>
+      </section>
+      <section class="settings-section" data-settings-section="accessibility">
+        <h2>Accessibility</h2><p class="settings-intro">Improve readability and comfort.</p>
+        <label class="setting-row"><span class="setting-copy"><b>Reduce motion</b><small>Limit interface animations and transitions.</small></span><input id="reducedMotionToggle" class="switch" type="checkbox"></label>
+      </section>
+      <section class="settings-section" data-settings-section="system">
+        <h2>System</h2><p class="settings-intro">Tune AuraBrowser’s background activity.</p>
+        <label class="setting-row"><span class="setting-copy"><b>Memory saver</b><small>Unload background tabs after this delay.</small></span><select id="memorySaver" class="setting-select"><option value="1">1 minute</option><option value="5">5 minutes</option><option value="15">15 minutes</option><option value="0">Off</option></select></label>
+      </section>
+      <section class="settings-section" data-settings-section="import">
+        <h2>Import data</h2><p class="settings-intro">Import all profile data AuraBrowser can use from another browser.</p>
+        <div class="settings-info-card"><b>Import every detected profile</b><span>Imports bookmarks, every recorded history visit, autofill/address values, supported search preferences, and cookie values that are readable. Saved passwords require a CSV export. Browser encryption and incompatible browser features limit some data types.</span></div>
+        <div class="import-source-grid">
+          <button class="import-source-button" data-migrate-source="chrome"><span class="import-source-mark">C</span><span><b>Google Chrome</b><small>Import from this device</small></span><span class="import-arrow">›</span></button>
+          <button class="import-source-button" data-migrate-source="edge"><span class="import-source-mark">E</span><span><b>Microsoft Edge</b><small>Import from this device</small></span><span class="import-arrow">›</span></button>
+          <button class="import-source-button" data-migrate-source="brave"><span class="import-source-mark">B</span><span><b>Brave</b><small>Import from this device</small></span><span class="import-arrow">›</span></button>
+          <button class="import-source-button" data-migrate-source="firefox"><span class="import-source-mark">F</span><span><b>Mozilla Firefox</b><small>Import from this device</small></span><span class="import-arrow">›</span></button>
+          <button class="import-source-button" data-import-source="file"><span class="import-source-mark">↥</span><span><b>HTML / JSON file</b><small>Firefox HTML or Chromium JSON</small></span><span class="import-arrow">›</span></button>
+        </div>
+        <div id="bookmarkImportStatus" class="bookmark-import-status" role="status" aria-live="polite"></div>
+        <div class="password-import-card"><div><b>Saved passwords</b><small>Export passwords as CSV from your browser, then import the file. Aura stores them encrypted on this device.</small></div><button id="importPasswordCsv" class="setting-action">Choose password CSV</button></div>
+        <p class="import-limits-note">Encrypted profile passwords and cookies, payment cards, passkeys, extensions, browser sessions, and site permissions cannot be migrated directly. CSV password exports are plaintext until imported; delete the export afterward.</p>
+        <div class="imported-bookmarks-heading"><h3>Bookmarks</h3><span id="bookmarkCount">0</span></div>
+        <div id="importedBookmarkList" class="imported-bookmark-list"></div>
+        <button id="showMoreBookmarks" class="load-more-aliases hidden">Show more bookmarks</button>
+        <div class="imported-bookmarks-heading"><h3>Browsing history <span id="historyCount">0</span></h3><button id="clearImportedHistory" class="alias-small-action danger">Clear history</button></div>
+        <div id="importedHistoryList" class="imported-bookmark-list"></div><button id="showMoreHistory" class="load-more-aliases hidden">Show more history</button>
+        <div class="imported-bookmarks-heading"><h3>Autofill and addresses <span id="autofillCount">0</span></h3></div>
+        <div id="importedAutofillList" class="imported-bookmark-list"></div><button id="showMoreAutofill" class="load-more-aliases hidden">Show more autofill values</button>
+        <div id="passwordVaultGate" class="password-vault-gate">
+          <img src="./assets/aurabrowser-logo.png" alt="AuraBrowser" class="password-vault-logo">
+          <div class="password-vault-copy"><b id="passwordVaultTitle">Protect passwords with a passkey</b><small id="passwordVaultMessage">Use Windows Hello or a FIDO2 security key. AuraBrowser asks before showing saved passwords.</small></div>
+          <button id="unlockPasswordVault" class="setting-action">Set up passkey</button>
+        </div>
+        <div id="passwordVaultData" class="hidden">
+          <div class="imported-bookmarks-heading"><h3>Saved passwords <span id="passwordCount">0</span></h3><button id="lockPasswordVault" class="alias-small-action">Lock now</button></div>
+          <div id="importedPasswordList" class="imported-bookmark-list"></div><button id="showMorePasswords" class="load-more-aliases hidden">Show more passwords</button>
+        </div>
+      </section>
+      <section class="settings-section" data-settings-section="developer">
+        <h2>Developer tools</h2><p class="settings-intro">Inspect the active webpage with Chromium Developer Tools.</p>
+        <div class="settings-info-card"><b>Page inspector</b><span>Developer Tools are provided by Chromium. You can also toggle them with the F12 shortcut.</span></div>
+        <button id="openDevTools" class="setting-action">Open Developer Tools</button>
+      </section>
+      <section class="settings-section" data-settings-section="reset">
+        <h2>Reset settings</h2><p class="settings-intro">Restore AuraBrowser preferences to their defaults.</p>
+        <div class="settings-info-card"><b>This resets browser preferences</b><span>Your open tabs and bookmarks are not affected.</span></div>
+        <button id="resetBrowserSettings" class="reset-settings-button">Restore default settings</button>
+      </section>
+      <section class="settings-section" data-settings-section="about">
+        <h2>About AuraBrowser</h2><p class="settings-intro">A quiet, privacy-first browser that keeps your data on your machine.</p>
+        <div class="setting-row informational"><span class="setting-copy"><b>Version</b><small id="aboutVersion">—</small></span></div>
+        <div class="setting-row informational"><span class="setting-copy"><b>Feedback and bug reports</b><small>Email <span class="selectable">13teamsaura@gmail.com</span>. Include your Windows version, the AuraBrowser version and the steps that cause the problem.</small></span><button id="copyFeedbackEmail" class="setting-action">Copy email</button></div>
+        <div class="settings-info-card"><b>No telemetry</b><span>AuraBrowser never sends usage data, crash reports or analytics. There are no AuraBrowser servers.</span></div>
+      </section>
+      <section class="settings-section" data-settings-section="keyboard">
+        <h3 class="keyboard-heading">Keyboard shortcuts</h3>
+        <p class="shortcuts-help">Select a shortcut field and press a new key combination. Use Escape to cancel.</p>
+        <div class="shortcut-row"><span>New tab</span><input class="shortcut-input" data-shortcut="newTab" readonly value="Ctrl+T" aria-label="New tab shortcut"></div>
+        <div class="shortcut-row"><span>Focus address</span><input class="shortcut-input" data-shortcut="focusAddress" readonly value="Ctrl+L" aria-label="Focus address shortcut"></div>
+        <div class="shortcut-row"><span>Close tab</span><input class="shortcut-input" data-shortcut="closeTab" readonly value="Ctrl+W" aria-label="Close tab shortcut"></div>
+        <div class="shortcut-row"><span>Reload</span><input class="shortcut-input" data-shortcut="reload" readonly value="Ctrl+R" aria-label="Reload shortcut"></div>
+        <div class="shortcut-row"><span>Back</span><input class="shortcut-input" data-shortcut="back" readonly value="Alt+ArrowLeft" aria-label="Back shortcut"></div>
+        <div class="shortcut-row"><span>Forward</span><input class="shortcut-input" data-shortcut="forward" readonly value="Alt+ArrowRight" aria-label="Forward shortcut"></div>
+        <div class="shortcut-row"><span>Glance</span><input class="shortcut-input" data-shortcut="glance" readonly value="Ctrl+Shift+G" aria-label="Glance shortcut"></div>
+        <div class="shortcut-row"><span>Split view</span><input class="shortcut-input" data-shortcut="split" readonly value="Ctrl+Shift+S" aria-label="Split view shortcut"></div>
+        <div class="shortcut-row"><span>Settings</span><input class="shortcut-input" data-shortcut="settings" readonly value="Ctrl+," aria-label="Settings shortcut"></div>
+        <div class="shortcut-row"><span>Developer tools</span><input class="shortcut-input" data-shortcut="devtools" readonly value="F12" aria-label="Developer tools shortcut"></div>
+        <div class="shortcut-row"><span>Find on page</span><input class="shortcut-input" data-shortcut="find" readonly value="Ctrl+F" aria-label="Find on page shortcut"></div>
+        <div class="shortcut-row"><span>Zoom in</span><input class="shortcut-input" data-shortcut="zoomIn" readonly value="Ctrl+Plus" aria-label="Zoom in shortcut"></div>
+        <div class="shortcut-row"><span>Zoom out</span><input class="shortcut-input" data-shortcut="zoomOut" readonly value="Ctrl+-" aria-label="Zoom out shortcut"></div>
+        <div class="shortcut-row"><span>Reset webpage zoom</span><input class="shortcut-input" data-shortcut="zoomReset" readonly value="Ctrl+0" aria-label="Reset webpage zoom shortcut"></div>
+        <div class="shortcut-row"><span>Next tab</span><input class="shortcut-input" data-shortcut="nextTab" readonly value="Ctrl+Tab" aria-label="Next tab shortcut"></div>
+        <div class="shortcut-row"><span>Previous tab</span><input class="shortcut-input" data-shortcut="previousTab" readonly value="Ctrl+Shift+Tab" aria-label="Previous tab shortcut"></div>
+        <div class="shortcut-row"><span>Reopen closed tab</span><input class="shortcut-input" data-shortcut="reopenTab" readonly value="Ctrl+Shift+T" aria-label="Reopen closed tab shortcut"></div>
+        <div class="shortcut-row"><span>Full screen</span><input class="shortcut-input" data-shortcut="fullscreen" readonly value="F11" aria-label="Full screen shortcut"></div>
+        <p class="settings-intro">Always available: <b>F5</b> reload · <b>Ctrl+Shift+R</b> reload without cache · <b>Ctrl+1–8</b> go to tab · <b>Ctrl+9</b> last tab · <b>Esc</b> stop loading or leave full screen.</p>
+        <button id="resetShortcuts" class="reset-shortcuts">Reset shortcuts</button>
+      </section>
+    </div>
+  </div>
+</div>
+<div id="welcomePage" class="welcome-page hidden" role="main" aria-label="First-run setup">
+  <div class="welcome-card">
+    <div class="welcome-brand"><img class="brand-mark" src="./assets/aurabrowser-logo.png" alt="AuraBrowser"><span>AuraBrowser setup</span></div>
+    <h1>Make AuraBrowser yours</h1><p class="welcome-intro">Choose a few preferences. You can change them later in Settings.</p>
+    <div class="welcome-fields">
+      <label><span>Profile name</span><input id="setupProfileName" type="text" maxlength="40" value="Personal" autocomplete="off"></label>
+      <label><span>Country or region</span><select id="setupCountry"><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option><option value="NZ">New Zealand</option><option value="DE">Germany</option><option value="FR">France</option><option value="JP">Japan</option><option value="BR">Brazil</option><option value="SG">Singapore</option></select></label>
+      <label><span>Preferred website language</span><select id="setupLanguage"><option value="en">English</option><option value="hi">Hindi</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="ja">Japanese</option><option value="pt">Portuguese</option></select></label>
+      <label><span>Appearance</span><select id="setupTheme"><option value="dark">Dark</option><option value="light">Light</option></select></label>
+      <label><span>Browser text size</span><select id="setupInterfaceSize"><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></label>
+      <label><span>Search engine</span><select id="setupSearchEngine"><option value="brave">Brave Search</option><option value="duckduckgo">DuckDuckGo</option><option value="google">Google</option><option value="bing">Bing</option><option value="startpage">Startpage</option><option value="ecosia">Ecosia</option></select></label>
+      <label class="welcome-zoom"><span>Webpage zoom <output id="setupPageZoomValue">100%</output></span><input id="setupPageZoom" type="range" min="0.5" max="2" step="0.05" value="1"></label>
+    </div>
+    <div class="welcome-import"><div><b>Bring your browser data</b><small>Import profiles, bookmarks, history, autofill, and readable cookies now or later.</small></div><div class="welcome-import-buttons"><button data-first-run-import="chrome">Chrome</button><button data-first-run-import="edge">Edge</button><button data-first-run-import="brave">Brave</button><button data-first-run-import="firefox">Firefox</button></div></div>
+    <div id="setupImportStatus" class="welcome-import-status" role="status" aria-live="polite"></div>
+    <div class="welcome-import-buttons welcome-extra-import"><button data-first-run-password-import>Import password CSV</button><button data-first-run-bookmark-import>Import bookmarks file</button></div>
+    <button id="finishSetup" class="welcome-finish">Finish setup</button>
+    <p class="welcome-once-note">This page appears once on a new profile.</p>
+  </div>
+</div>
+        </section>
+      </main>
+    </div>
+    
+    
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+</body>
+</html>

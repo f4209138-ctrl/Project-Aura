@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <title>Password vault passkey</title>
+  <link rel="stylesheet" href="/passkey.css">
+  <script src="/passkey.js" defer></script>
+</head>
+<body>
+  <main class="passkey-card">
+    <img class="passkey-logo" src="/assets/aurabrowser-logo.png" alt="AuraBrowser">
+    <p class="eyebrow">AURABROWSER PASSWORD VAULT</p>
+    <h1 id="passkeyTitle">Verify your identity</h1>
+    <p id="passkeyDescription" class="description">Confirm it's you to see your saved passwords.</p>
+    <p id="passkeyStatus" class="status" role="status" aria-live="polite">Your passwords stay on this device.</p>
+    <div id="passkeyChoice">
+      <button id="passkeyContinue" class="primary-button" type="button">Continue with passkey</button>
+      <small id="passkeyHint" class="hint">Windows Hello (face, fingerprint or PIN), an Android or iPhone passkey, or a security key.</small>
+      <button id="usePinInstead" class="link-button" type="button" hidden>Use a vault PIN instead</button>
+    </div>
+    <form id="pinForm" class="pin-form" hidden>
+      <input id="pinInput" type="password" autocomplete="off" placeholder="Vault PIN or passphrase" aria-label="Vault PIN or passphrase" maxlength="128">
+      <input id="pinConfirm" type="password" autocomplete="off" placeholder="Type it again" aria-label="Confirm vault PIN" maxlength="128" hidden>
+      <button id="pinSubmit" class="primary-button" type="submit">Unlock</button>
+      <button id="usePasskeyInstead" class="link-button" type="button" hidden>Use a passkey instead</button>
+    </form>
+    <button id="passkeyCancel" class="secondary-button" type="button">Cancel</button>
+    <small class="origin-note">Nothing leaves this computer.</small>
+  </main>
+</body>
+</html>

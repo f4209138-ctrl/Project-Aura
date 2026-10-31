@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AuraBrowser — browse quietly</title>
+<meta name="description" content="AuraBrowser is a free, privacy-first desktop browser. No account, no telemetry, Tor built in. Your data stays on your machine.">
+<meta property="og:title" content="AuraBrowser — browse quietly">
+<meta property="og:description" content="A free, privacy-first browser. No account, no telemetry, Tor built in.">
+<meta property="og:image" content="logo.png">
+<meta name="theme-color" content="#070b0a">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b0a; --bg2:#0c1312; --card:rgba(18,27,26,.62); --line:rgba(160,230,200,.13);
+  --text:#e8f3ee; --muted:#93a89f; --mint:#7fe0bb; --mint2:#3fbf91; --glow:rgba(127,224,187,.35);
+  --display:"Space Grotesk",ui-sans-serif,system-ui,sans-serif; --body:"Inter",ui-sans-serif,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+#scene{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% -10%,rgba(63,191,145,.16),transparent 60%),radial-gradient(ellipse at 100% 100%,rgba(63,191,145,.08),transparent 50%)}
+main{position:relative;z-index:2}
+
+/* nav */
+.nav{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:calc(14px + env(safe-area-inset-top,0px)) clamp(16px,4vw,48px) 14px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:linear-gradient(to bottom,rgba(7,11,10,.82),rgba(7,11,10,.35));border-bottom:1px solid transparent;transition:border-color .3s}
+.nav.scrolled{border-bottom-color:var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font:600 18px var(--display);text-decoration:none;letter-spacing:-.3px}
+.brand img{width:30px;height:30px;border-radius:8px}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-links a.plain{padding:8px 12px;color:var(--muted);text-decoration:none;font-size:14px;border-radius:8px}
+.nav-links a.plain:hover{color:var(--text)}
+@media (max-width:720px){.nav-links a.plain{display:none}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 22px;border-radius:12px;font:600 15px var(--body);text-decoration:none;cursor:pointer;border:1px solid transparent;transition:transform .2s,box-shadow .2s,background .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{color:#05140e;background:linear-gradient(110deg,#a6f0d2,#5fd4a8);box-shadow:0 10px 40px -8px var(--glow)}
+.btn-primary:hover{box-shadow:0 16px 50px -6px var(--glow)}
+.btn-ghost{color:var(--text);background:rgba(255,255,255,.04);border-color:var(--line)}
+.btn-ghost:hover{background:rgba(255,255,255,.08)}
+.btn-sm{min-height:38px;padding:0 14px;font-size:13.5px;border-radius:10px}
+.btn svg{width:18px;height:18px;flex:none}
+
+/* layout */
+section{min-height:100vh;display:flex;align-items:center;padding:120px clamp(16px,6vw,96px)}
+.wrap{width:100%;max-width:1180px;margin:0 auto}
+.eyebrow{display:inline-block;margin-bottom:18px;color:var(--mint);font:600 12.5px var(--display);letter-spacing:.22em;text-transform:uppercase}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.03em;margin:0}
+h1{font-size:clamp(46px,8.4vw,112px);line-height:.95;font-weight:700}
+h1 .soft{color:transparent;background:linear-gradient(100deg,#e8f3ee 10%,#7fe0bb 55%,#3fbf91);-webkit-background-clip:text;background-clip:text}
+h2{font-size:clamp(34px,5.4vw,68px);line-height:1;font-weight:700}
+h3{font-size:21px;font-weight:600;letter-spacing:-.01em}
+.lead{max-width:560px;margin:26px 0 0;color:var(--muted);font-size:clamp(17px,1.6vw,20px)}
+
+/* hero */
+.hero{padding-top:140px}
+.hero .wrap{display:grid;gap:0}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:38px}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.stat{display:inline-flex;align-items:center;gap:9px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:14px;color:var(--muted)}
+.stat b{color:var(--text);font:600 15px var(--display);font-variant-numeric:tabular-nums}
+.stat svg{width:16px;height:16px;color:var(--mint)}
+.live{display:inline-flex;align-items:center;gap:7px;color:var(--mint);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 0 var(--glow);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,224,187,.55)}70%{box-shadow:0 0 0 10px rgba(127,224,187,0)}100%{box-shadow:0 0 0 0 rgba(127,224,187,0)}}
+.scroll-hint{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);color:var(--muted);font-size:12px;letter-spacing:.2em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:10px}
+.scroll-hint span{width:1px;height:42px;background:linear-gradient(var(--mint),transparent);animation:drip 2.2s infinite}
+@keyframes drip{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* feature panels */
+.feature .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:center}
+.feature.right .copy{grid-column:2}
+.copy p{color:var(--muted);font-size:18px;max-width:500px;margin:22px 0 0}
+.points{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:12px}
+.points li{display:flex;gap:12px;align-items:flex-start;color:#c6d6cf}
+.points li::before{content:"";flex:none;width:18px;height:18px;margin-top:4px;border-radius:6px;background:linear-gradient(135deg,#a6f0d2,#3fbf91);box-shadow:0 0 18px -2px var(--glow)}
+@media (max-width:860px){.feature .wrap{grid-template-columns:1fr}.feature.right .copy{grid-column:1}}
+
+/* glass cards grid */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:48px}
+@media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+.card{padding:26px;border:1px solid var(--line);border-radius:20px;background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .35s,border-color .35s}
+.card:hover{transform:translateY(-4px);border-color:rgba(127,224,187,.35)}
+.card .ico{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:rgba(127,224,187,.1);color:var(--mint);margin-bottom:18px}
+.card .ico svg{width:22px;height:22px}
+.card p{margin:10px 0 0;color:var(--muted);font-size:15px}
+
+/* big numbers */
+.numbers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:48px}
+@media (max-width:760px){.numbers{grid-template-columns:1fr}}
+.number{padding:34px 28px;border:1px solid var(--line);border-radius:22px;background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.number b{display:block;font:700 clamp(48px,6vw,76px)/1 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums;background:linear-gradient(120deg,#e8f3ee,#7fe0bb);-webkit-background-clip:text;background-clip:text;color:transparent}
+.number span{display:block;margin-top:12px;color:var(--muted)}
+.number small{display:block;margin-top:4px;color:#6f857b;font-size:12.5px}
+
+/* download */
+.download{text-align:center}
+.download .wrap{display:flex;flex-direction:column;align-items:center}
+.download .lead{margin-left:auto;margin-right:auto}
+.dl-box{margin-top:40px;width:min(640px,100%);padding:30px;border:1px solid var(--line);border-radius:24px;background:var(--card);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);text-align:left}
+.dl-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.dl-meta{color:var(--muted);font-size:14px}
+.dl-meta b{color:var(--text)}
+.note{margin-top:22px;padding:16px 18px;border-radius:14px;background:rgba(255,214,120,.06);border:1px solid rgba(255,214,120,.18);color:#d9cfae;font-size:14px}
+.note b{color:#f2e3b6}
+.hash{margin-top:16px;font-size:12.5px;color:#7d9188;word-break:break-all}
+.hash code{font-family:ui-monospace,Consolas,monospace;color:#a9c2b7}
+footer{position:relative;z-index:2;padding:40px clamp(16px,6vw,96px) calc(40px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:rgba(7,11,10,.85);color:var(--muted);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
+footer a{color:var(--text)}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.live::before,.scroll-hint span{animation:none}}
+.nogl #scene{display:none}
+.nogl .grain{background:radial-gradient(ellipse at 70% 30%,rgba(63,191,145,.22),transparent 55%),radial-gradient(ellipse at 10% 90%,rgba(63,191,145,.1),transparent 50%)}
+</style>
+</head>
+<body>
+<canvas id="scene" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <a class="brand" href="#top"><img src="logo.png" alt="">AuraBrowser</a>
+  <nav class="nav-links" aria-label="Main">
+    <a class="plain" href="#privacy">Privacy</a>
+    <a class="plain" href="#features">Features</a>
+    <a class="plain" href="#community">Community</a>
+    <a class="btn btn-ghost btn-sm repo-link" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+      GitHub
+    </a>
+    <a class="btn btn-primary btn-sm download-link" href="#download">Download</a>
+  </nav>
+</header>
+
+<main id="top">
+  <!-- 1. hero -->
+  <section class="hero" data-stage="0" style="position:relative">
+    <div class="wrap">
+      <span class="eyebrow reveal">Free · Open source · Windows</span>
+      <h1 class="reveal d1">Browse<br><span class="soft">quietly.</span></h1>
+      <p class="lead reveal d2">AuraBrowser is a privacy-first browser that keeps everything on your machine. No account. No telemetry. Tor built in.</p>
+      <div class="cta reveal d3">
+        <a class="btn btn-primary download-link" href="#download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16"/></svg>
+          Download for Windows
+        </a>
+        <a class="btn btn-ghost repo-link" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+      <div class="stats reveal d3" aria-live="polite">
+        <span class="live">Live</span>
+        <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16"/></svg><b data-stat="downloads">—</b> downloads</span>
+        <span class="stat"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.6 2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5L2.6 9.4l6.5-.8z"/></svg><b data-stat="stars">—</b> stars</span>
+        <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><b data-stat="watchers">—</b> watching</span>
+      </div>
+    </div>
+    <div class="scroll-hint" aria-hidden="true">Scroll<span></span></div>
+  </section>
+
+  <!-- 2. privacy -->
+  <section class="feature right" id="privacy" data-stage="1">
+    <div class="wrap">
+      <div class="copy">
+        <span class="eyebrow reveal">Private by default</span>
+        <h2 class="reveal d1">Nothing about you<br>leaves your PC.</h2>
+        <p class="reveal d2">No sign-in, no cloud profile, no analytics, no crash reports. There are no AuraBrowser servers to send anything to.</p>
+        <ul class="points reveal d3">
+          <li>Trackers and ad domains blocked before they load</li>
+          <li>HTTPS-only mode and tracking parameters stripped from links</li>
+          <li>Sites must ask before using your camera, mic or location</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. tor -->
+  <section class="feature" data-stage="2">
+    <div class="wrap">
+      <div class="copy">
+        <span class="eyebrow reveal">Tor, built in</span>
+        <h2 class="reveal d1">One click.<br>Three hops.</h2>
+        <p class="reveal d2">Tor ships inside AuraBrowser. Flip one switch and your traffic routes through the Tor network, with no separate download and no setup.</p>
+        <ul class="points reveal d3">
+          <li>Bundled and verified Tor, ready offline</li>
+          <li>WebRTC leaks blocked</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. features -->
+  <section id="features" data-stage="3">
+    <div class="wrap">
+      <span class="eyebrow reveal">Everything you need</span>
+      <h2 class="reveal d1">Fast, light, and<br>yours to shape.</h2>
+      <div class="grid">
+        <article class="card reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><h3>Passwords that ask first</h3><p>Encrypted on your device. Unlock with Windows Hello, a phone passkey, a security key or a PIN — every time.</p></article>
+        <article class="card reveal d1"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><h3>Sleeping tabs</h3><p>Inactive and restored tabs sleep until you open them, so startup is quick and memory stays low.</p></article>
+        <article class="card reveal d2"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M12 4v16"/></svg></div><h3>Split view & Glance</h3><p>Two pages side by side, or preview a link in a throwaway window that never touches your history.</p></article>
+        <article class="card reveal"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"/></svg></div><h3>Vertical tabs</h3><p>A tidy sidebar built for wide screens. Collapse it when you want the whole page.</p></article>
+        <article class="card reveal d1"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></div><h3>Your shortcuts</h3><p>Every keyboard shortcut can be changed. Search engine, theme, text size and zoom too.</p></article>
+        <article class="card reveal d2"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16"/></svg></div><h3>Easy move-in</h3><p>First-run setup imports bookmarks, history and settings from Chrome, Edge, Brave and Firefox.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. community / live numbers -->
+  <section id="community" data-stage="4">
+    <div class="wrap">
+      <span class="eyebrow reveal"><span class="live">Live from GitHub</span></span>
+      <h2 class="reveal d1">Built in the open.</h2>
+      <p class="lead reveal d2">Every line of AuraBrowser is public. These numbers come straight from GitHub and refresh on their own.</p>
+      <div class="numbers">
+        <div class="number reveal"><b data-stat="downloads">—</b><span>installer downloads</span><small>across all releases</small></div>
+        <div class="number reveal d1"><b data-stat="stars">—</b><span>stars</span><small>people who starred the repo</small></div>
+        <div class="number reveal d2"><b data-stat="watchers">—</b><span>watching</span><small>people following updates</small></div>
+      </div>
+      <div class="cta reveal d3">
+        <a class="btn btn-ghost repo-link" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.6 2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.2l-5.8 3.2 1.2-6.5L2.6 9.4l6.5-.8z"/></svg>
+          Star the repo
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. download -->
+  <section class="download" id="download" data-stage="5">
+    <div class="wrap">
+      <span class="eyebrow reveal">Get AuraBrowser</span>
+      <h2 class="reveal d1">Ready when you are.</h2>
+      <p class="lead reveal d2">Free forever. Windows 10 and 11, 64-bit.</p>
+      <div class="dl-box reveal d3">
+        <div class="dl-row">
+          <div class="dl-meta"><b id="dlName">AuraBrowser-Setup.exe</b><br><span id="dlInfo">Latest release</span></div>
+          <a class="btn btn-primary download-link" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 21h16"/></svg>
+            Download
+          </a>
+        </div>
+        <div class="note"><b>Seeing a blue “Windows protected your PC” screen?</b> That's normal for new apps that aren't code-signed yet. Click <b>More info → Run anyway</b>. If Windows Smart App Control is on, it blocks unsigned apps entirely — a signed release is on the way.</div>
+        <div class="hash">SHA-256: <code id="dlHash">f27f4d8c1ae85d80a42636eaec571493e5cf8e11cb24c9c26368cbc472ef8d5d</code></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© AuraBrowser · MIT License · No telemetry, ever.</span>
+    <span>Feedback: <a href="mailto:13teamsaura@gmail.com">13teamsaura@gmail.com</a> · <a class="repo-link" href="#" target="_blank" rel="noopener">GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+/* ---------- repo + live stats ---------- */
+(function () {
+  const FALLBACK_OWNER = '__OWNER__';
+  const REPO_NAME = 'AuraBrowser';
+  const ASSET = 'AuraBrowser-Setup.exe';
+  const host = location.hostname;
+  const owner = host.endsWith('.github.io') ? host.split('.')[0] : FALLBACK_OWNER;
+  const repoUrl = 'https://github.com/' + owner + '/' + REPO_NAME;
+  const downloadUrl = repoUrl + '/releases/latest/download/' + ASSET;
+  document.querySelectorAll('.repo-link').forEach((a) => { a.href = repoUrl; });
+  document.querySelectorAll('.download-link').forEach((a) => { if (a.closest('.dl-box')) a.href = downloadUrl; });
+  document.querySelector('.dl-box .download-link').href = downloadUrl;
+
+  const fmt = (n) => n >= 10000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1) + 'k' : n.toLocaleString();
+  const shown = {};
+  function animateTo(key, value) {
+    const from = shown[key] ?? 0; shown[key] = value;
+    const els = document.querySelectorAll('[data-stat="' + key + '"]');
+    const start = performance.now(), dur = from === value ? 0 : 1100;
+    function step(t) {
+      const p = dur ? Math.min(1, (t - start) / dur) : 1;
+      const eased = 1 - Math.pow(1 - p, 3);
+      els.forEach((el) => { el.textContent = fmt(Math.round(from + (value - from) * eased)); });
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  async function refresh() {
+    try {
+      const [repo, releases] = await Promise.all([
+        fetch('https://api.github.com/repos/' + owner + '/' + REPO_NAME).then((r) => r.ok ? r.json() : Promise.reject(r.status)),
+        fetch('https://api.github.com/repos/' + owner + '/' + REPO_NAME + '/releases?per_page=100').then((r) => r.ok ? r.json() : [])
+      ]);
+      const downloads = releases.reduce((sum, rel) => sum + (rel.assets || []).filter((a) => a.name.endsWith('.exe')).reduce((s, a) => s + a.download_count, 0), 0);
+      animateTo('stars', repo.stargazers_count || 0);
+      animateTo('watchers', repo.subscribers_count || 0);
+      animateTo('downloads', downloads);
+      const latest = releases.find((r) => !r.draft && !r.prerelease);
+      const asset = latest?.assets?.find((a) => a.name === ASSET);
+      if (latest) document.getElementById('dlInfo').textContent = latest.tag_name + ' · ' + (asset ? Math.round(asset.size / 1048576) + ' MB · ' : '') + new Date(latest.published_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch { /* rate-limited or offline: keep last numbers */ }
+  }
+  refresh();
+  // GitHub allows 60 anonymous requests an hour; 2 per refresh every 2.5 min stays well under.
+  setInterval(() => { if (!document.hidden) refresh(); }, 150000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+})();
+
+/* ---------- reveal + nav ---------- */
+(function () {
+  const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .18 });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  const nav = document.getElementById('nav');
+  addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 20), { passive: true });
+})();
+</script>
+
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }</script>
+<script type="module">
+import * as THREE from 'three';
+
+const canvas = document.getElementById('scene');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' }); }
+catch { document.documentElement.classList.add('nogl'); throw new Error('WebGL unavailable'); }
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x070b0a, 0.055);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+
+/* lights */
+scene.add(new THREE.AmbientLight(0x9fe8cc, 0.35));
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(4, 6, 6); scene.add(key);
+const rim = new THREE.PointLight(0x5fd4a8, 40, 30); rim.position.set(-4, -2, 3); scene.add(rim);
+const fill = new THREE.PointLight(0xa6f0d2, 18, 20); fill.position.set(3, -3, -2); scene.add(fill);
+
+/* logo: three rounded diagonal bars */
+function pillShape(len, rad) {
+  const s = new THREE.Shape(), h = len / 2 - rad;
+  s.moveTo(-h, -rad); s.lineTo(h, -rad); s.absarc(h, 0, rad, -Math.PI / 2, Math.PI / 2, false);
+  s.lineTo(-h, rad); s.absarc(-h, 0, rad, Math.PI / 2, Math.PI * 1.5, false);
+  return s;
+}
+const logo = new THREE.Group();
+const lengths = [2.2, 2.9, 2.2];
+const bars = lengths.map((len, i) => {
+  const geo = new THREE.ExtrudeGeometry(pillShape(len, 0.26), { depth: 0.34, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.07, bevelSegments: 6, curveSegments: 24 });
+  geo.center();
+  const mat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color().setHSL(0.43, 0.62, 0.55 + i * 0.04), metalness: 0.25, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.15, emissive: 0x1d6b50, emissiveIntensity: 0.35 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.userData.home = new THREE.Vector3((i - 1) * 0.52, (i - 1) * -0.52, 0);
+  mesh.rotation.z = Math.PI / 4;
+  mesh.position.copy(mesh.userData.home);
+  logo.add(mesh);
+  return mesh;
+});
+scene.add(logo);
+
+/* glow halo */
+const haloTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128); gr.addColorStop(0, 'rgba(127,224,187,.55)'); gr.addColorStop(.4, 'rgba(63,191,145,.16)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c); })();
+const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+halo.scale.set(9, 9, 1); halo.position.z = -1.5; logo.add(halo);
+
+/* particle field */
+const COUNT = innerWidth < 700 ? 900 : 1800;
+const pos = new Float32Array(COUNT * 3);
+for (let i = 0; i < COUNT; i++) { const r = 6 + Math.random() * 22, t = Math.random() * Math.PI * 2, p = Math.acos(2 * Math.random() - 1); pos[i * 3] = r * Math.sin(p) * Math.cos(t); pos[i * 3 + 1] = r * Math.sin(p) * Math.sin(t) * .6; pos[i * 3 + 2] = r * Math.cos(p) - 6; }
+const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x8ff0c8, size: 0.045, transparent: true, opacity: .7, depthWrite: false, blending: THREE.AdditiveBlending }));
+scene.add(particles);
+
+/* orbit rings (appear for Tor section) */
+const rings = new THREE.Group();
+for (let i = 0; i < 3; i++) {
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(2.4 + i * .55, .012, 8, 160), new THREE.MeshBasicMaterial({ color: 0x7fe0bb, transparent: true, opacity: 0 }));
+  ring.rotation.set(Math.PI / 2.4 + i * .35, i * .6, 0);
+  rings.add(ring);
+}
+logo.add(rings);
+
+/* scroll-driven keyframes, one per section: [logoX, logoY, camZ, spin, spread, ringOpacity] */
+const isNarrow = () => innerWidth < 860;
+const frames = () => {
+  const n = isNarrow();
+  return [
+    [n ? 0 : 2.6, n ? 1.4 : 0, 9, 0.0, 0.0, 0],
+    [n ? 0 : -2.7, n ? 1.6 : 0.1, 9.5, 0.9, 0.2, 0],
+    [n ? 0 : 2.7, n ? 1.6 : 0, 8.2, 1.9, 0.0, .55],
+    [0, n ? 2.4 : 2.2, 12, 2.8, 1.1, 0],
+    [0, 0, 13, 3.6, 0.5, .25],
+    [0, n ? 2.2 : 1.8, 10, 4.7, 0.0, 0]
+  ];
+};
+const sections = [...document.querySelectorAll('[data-stage]')];
+function progress() {
+  const mid = scrollY + innerHeight / 2;
+  for (let i = 0; i < sections.length - 1; i++) {
+    const a = sections[i].offsetTop + sections[i].offsetHeight / 2, b = sections[i + 1].offsetTop + sections[i + 1].offsetHeight / 2;
+    if (mid <= b) return i + Math.max(0, Math.min(1, (mid - a) / (b - a)));
+  }
+  return sections.length - 1;
+}
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = (t) => t * t * (3 - 2 * t);
+function sample(p) {
+  const f = frames(), i = Math.min(f.length - 2, Math.floor(p)), t = ease(Math.min(1, p - i));
+  return f[i].map((v, k) => lerp(v, f[i + 1][k], t));
+}
+
+const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+addEventListener('pointermove', (e) => { mouse.tx = e.clientX / innerWidth - .5; mouse.ty = e.clientY / innerHeight - .5; }, { passive: true });
+
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+let cur = sample(progress());
+const clock = new THREE.Clock();
+function tick() {
+  const dt = Math.min(clock.getDelta(), .05), time = clock.elapsedTime;
+  const target = sample(progress());
+  const k = reduce ? 1 : 1 - Math.pow(.0015, dt);
+  cur = cur.map((v, i) => lerp(v, target[i], k));
+  const [lx, ly, cz, spin, spread, ringO] = cur;
+  mouse.x = lerp(mouse.x, mouse.tx, k); mouse.y = lerp(mouse.y, mouse.ty, k);
+
+  logo.position.set(lx, ly, 0);
+  logo.rotation.y = spin * 1.2 + (reduce ? 0 : Math.sin(time * .5) * .15) + mouse.x * .5;
+  logo.rotation.x = Math.sin(spin) * .35 + mouse.y * .35;
+  bars.forEach((b, i) => {
+    const off = (i - 1) * spread;
+    b.position.set(b.userData.home.x + off * 1.2, b.userData.home.y - off * .4, off * 1.6 + (reduce ? 0 : Math.sin(time * 1.1 + i) * .05));
+    b.rotation.x = spread * (i - 1) * .9;
+  });
+  rings.children.forEach((r, i) => { r.material.opacity = ringO * (1 - i * .25); r.rotation.z += dt * (.25 + i * .12); });
+  particles.rotation.y = time * .02 + spin * .15;
+  particles.position.y = -spin * .6;
+  camera.position.set(mouse.x * .6, -mouse.y * .4, cz);
+  camera.lookAt(0, 0, 0);
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>
